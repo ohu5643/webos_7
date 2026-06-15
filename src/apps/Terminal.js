@@ -195,7 +195,7 @@ export default class Terminal {
 
                     await this.fs.createFile(
                         user.uid,
-                        fileName
+                        fileName,
                     );
 
 
