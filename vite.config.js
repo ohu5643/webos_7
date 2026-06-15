@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite'
 
 export default defineConfig({
-  base: '/webos_6/'
+  base: '/webos_7/'
 })
 
 
