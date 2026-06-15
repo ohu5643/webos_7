@@ -92,6 +92,7 @@ export default class FileSystem {
     async createFolder(
         uid,
         folderName
+        parent = "root"
     ) {
 
         await setDoc(
@@ -104,7 +105,7 @@ export default class FileSystem {
             ), {
                 name: folderName,
                 type: "folder",
-                parent: "root"
+                parent
             }
         );
 
