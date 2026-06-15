@@ -45,8 +45,7 @@ export default class FileSystem {
                     uid,
                     "filesystem",
                     folder
-                ),
-                {
+                ), {
                     name: folder,
                     type: "folder",
                     parent: "root"
@@ -60,7 +59,32 @@ export default class FileSystem {
         );
     }
 
-    async getNodes(uid) {
+    async getNodes(
+        uid,
+        parent = "root"
+    ) {
+
+        const ref =
+            collection(
+                db,
+                "users",
+                uid,
+                "filesystem"
+            );
+
+        const snapshot =
+            await getDocs(ref);
+
+        return snapshot.docs
+            .map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }))
+            .filter(
+                node =>
+                node.parent === parent
+            );
+    } {
 
         const ref =
             collection(
@@ -93,8 +117,7 @@ export default class FileSystem {
                 uid,
                 "filesystem",
                 folderName
-            ),
-            {
+            ), {
                 name: folderName,
                 type: "folder",
                 parent: "root"
@@ -116,8 +139,7 @@ export default class FileSystem {
                 uid,
                 "filesystem",
                 fileName
-            ),
-            {
+            ), {
                 name: fileName,
                 type: "file",
                 parent,
@@ -128,25 +150,25 @@ export default class FileSystem {
     }
 
     async getFile(
-    uid,
-    fileName
-) {
+        uid,
+        fileName
+    ) {
 
-    const ref =
-        doc(
-            db,
-            "users",
-            uid,
-            "filesystem",
-            fileName
-        );
+        const ref =
+            doc(
+                db,
+                "users",
+                uid,
+                "filesystem",
+                fileName
+            );
 
-    const snapshot =
-        await getDoc(ref);
+        const snapshot =
+            await getDoc(ref);
 
-    return snapshot.data();
+        return snapshot.data();
 
-}
+    }
 
     async saveFile(
         uid,
@@ -161,8 +183,7 @@ export default class FileSystem {
                 uid,
                 "filesystem",
                 fileName
-            ),
-            {
+            ), {
                 name: fileName,
                 type: "file",
                 parent: "root",
@@ -173,4 +194,3 @@ export default class FileSystem {
     }
 
 }
-
