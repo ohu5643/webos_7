@@ -6,6 +6,8 @@ export default class Explorer {
         this.wm = wm;
         this.auth = auth;
 
+        this.currentFolder = "root";
+
     }
 
     async open(){
