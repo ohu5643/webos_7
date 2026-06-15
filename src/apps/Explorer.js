@@ -1,6 +1,6 @@
 export default class Explorer {
 
-    constructor(fs, wm, auth){
+    constructor(fs, wm, auth) {
 
         this.fs = fs;
         this.wm = wm;
@@ -10,16 +10,16 @@ export default class Explorer {
 
     }
 
-    async open(){
+    async open() {
 
         const user =
             this.auth.currentUser;
 
-        if(!user) return;
+        if (!user) return;
 
         const nodes =
             await this.fs.getNodes(
-                user.uid
+                user.uid this.currentFolder
             );
 
         const html =
@@ -50,6 +50,19 @@ export default class Explorer {
                 "Explorer",
 
                 `
+
+<div>
+
+현재 위치 :
+${this.currentFolder}
+
+</div>
+
+<button id="back-folder">
+← 뒤로
+</button>
+
+<br><br>
                 <button id="new-folder">
 
                     새 폴더
@@ -79,18 +92,18 @@ export default class Explorer {
             .addEventListener(
                 "click",
 
-                async ()=>{
+                async () => {
 
                     const folderName =
                         prompt(
                             "폴더 이름"
                         );
 
-                    if(!folderName) return;
+                    if (!folderName) return;
 
                     await this.fs.createFolder(
                         user.uid,
-                        folderName
+                        folderName this.currentFolder
                     );
 
                     win.remove();
@@ -107,19 +120,18 @@ export default class Explorer {
             .addEventListener(
                 "click",
 
-                async ()=>{
+                async () => {
 
                     const fileName =
                         prompt(
                             "파일 이름"
                         );
 
-                    if(!fileName) return;
+                    if (!fileName) return;
 
                     await this.fs.createFile(
                         user.uid,
-                        fileName
-                        this.currentFolder
+                        fileName this.currentFolder
                     );
 
                     win.remove();
