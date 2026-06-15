@@ -117,6 +117,7 @@ export default class Explorer {
                     await this.fs.createFile(
                         user.uid,
                         fileName
+                        this.currentFolder
                     );
 
                     win.remove();
