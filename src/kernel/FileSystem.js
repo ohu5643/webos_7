@@ -4,6 +4,7 @@ import {
     getDoc,
     doc,
     setDoc
+    deleteDoc
 }
 from "firebase/firestore";
 
@@ -179,6 +180,23 @@ export default class FileSystem {
                 ...oldFile,
                 content
             }
+        );
+
+    }
+
+    async deleteNode(
+        uid,
+        nodeId
+    ) {
+
+        await deleteDoc(
+            doc(
+                db,
+                "users",
+                uid,
+                "filesystem",
+                nodeId
+            )
         );
 
     }
