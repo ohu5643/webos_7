@@ -1,180 +1,269 @@
-import {
-    collection,
-    getDocs,
-    getDoc,
-    doc,
-    setDoc
-}
-from "firebase/firestore";
+export default class Explorer {
 
-import {
-    db
-}
-from "../firebase/firebase.js";
+    constructor(fs, wm, auth) {
 
-export default class FileSystem {
+        this.fs = fs;
+        this.wm = wm;
+        this.auth = auth;
 
-    async initialize(uid) {
+        this.currentFolder = "root";
 
-        const ref =
-            collection(
-                db,
-                "users",
-                uid,
-                "filesystem"
+    }
+
+    async open() {
+
+        const user =
+            this.auth.currentUser;
+
+        if (!user) return;
+
+        const nodes =
+            await this.fs.getNodes(
+                user.uid,
+                this.currentFolder
             );
 
-        const snapshot =
-            await getDocs(ref);
+        const html =
+            nodes.map(
+                node => `
 
-        if (!snapshot.empty) return;
+                <div
+                    class="file-item"
+                    data-id="${node.id}"
+                    data-type="${node.type}"
+                >
 
-        const defaults = [
-            "Documents",
-            "Downloads",
-            "Pictures",
-            "Desktop"
-        ];
+                    ${
+                        node.type === "folder"
+                        ? "📁"
+                        : "📄"
+                    }
 
-        for (const folder of defaults) {
+                    ${node.name}
 
-            await setDoc(
-                doc(
-                    db,
-                    "users",
-                    uid,
-                    "filesystem",
-                    folder
-                ), {
-                    name: folder,
-                    type: "folder",
-                    parent: "root"
+                </div>
+
+                `
+            ).join("");
+
+        const win =
+            this.wm.createWindow(
+                "Explorer",
+
+                `
+
+<div>
+
+현재 위치 :
+${this.currentFolder}
+
+</div>
+
+<button id="back-folder">
+← 뒤로
+</button>
+
+<br><br>
+                <button id="new-folder">
+
+                    새 폴더
+
+                </button>
+
+                <button id="new-file">
+
+                    새 파일
+
+                </button>
+
+                <hr>
+
+                <div id="folder-list">
+
+                    ${html}
+
+                </div>
+                `
+            );
+
+        win
+            .querySelector(
+                "#new-folder"
+            )
+            .addEventListener(
+                "click",
+
+                async () => {
+
+                    const folderName =
+                        prompt(
+                            "폴더 이름"
+                        );
+
+                    if (!folderName) return;
+
+                    await this.fs.createFolder(
+                        user.uid,
+                        folderName,
+                        this.currentFolder
+                    );
+
+                    win.remove();
+
+                    this.open();
+
                 }
             );
 
-        }
-
-        console.log(
-            "Filesystem initialized"
-        );
-    }
-
-    async getNodes(
-        uid,
-        parent = "root"
-    ) {
-
-        const ref =
-            collection(
-                db,
-                "users",
-                uid,
-                "filesystem"
-            );
-
-        const snapshot =
-            await getDocs(ref);
-
-        return snapshot.docs
-            .map(
-                doc => ({
-                    id: doc.id,
-                    ...doc.data()
-                })
+        win
+            .querySelector(
+                "#new-file"
             )
-            .filter(
-                node =>
-                node.parent === parent
+            .addEventListener(
+                "click",
+
+                async () => {
+
+                    const fileName =
+                        prompt(
+                            "파일 이름"
+                        );
+
+                    if (!fileName) return;
+
+                    await this.fs.createFile(
+                        user.uid,
+                        fileName,
+                        this.currentFolder
+                    );
+
+                    win.remove();
+
+                    this.open();
+
+                }
             );
 
-    }
+        win
+            .querySelector(
+                "#back-folder"
+            )
+            .addEventListener(
+                "click",
+                () => {
 
-    async createFolder(
-        uid,
-        folderName,
-        parent = "root"
-    ) {
+                    this.currentFolder =
+                        "root";
 
-        await setDoc(
-            doc(
-                db,
-                "users",
-                uid,
-                "filesystem",
-                folderName
-            ), {
-                name: folderName,
-                type: "folder",
-                parent
-            }
-        );
+                    win.remove();
 
-    }
+                    this.open();
 
-    async createFile(
-        uid,
-        fileName,
-        parent = "root"
-    ) {
-
-        await setDoc(
-            doc(
-                db,
-                "users",
-                uid,
-                "filesystem",
-                fileName
-            ), {
-                name: fileName,
-                type: "file",
-                parent,
-                content: ""
-            }
-        );
-
-    }
-
-    async getFile(
-        uid,
-        fileName
-    ) {
-
-        const ref =
-            doc(
-                db,
-                "users",
-                uid,
-                "filesystem",
-                fileName
+                }
             );
 
-        const snapshot =
-            await getDoc(ref);
+        win
+            .querySelectorAll(
+                ".file-item"
+            )
+            .forEach(
+                item => {
 
-        return snapshot.data();
+                    item.addEventListener(
+                        "dblclick",
+                        async () => {
 
-    }
+                            const type =
+                                item.dataset.type;
 
-    async saveFile(
-        uid,
-        fileName,
-        content
-    ) {
+                            const name =
+                                item.textContent
+                                .replace("📁", "")
+                                .replace("📄", "")
+                                .trim();
+                            const id =
+                                item.dataset.id;
 
-        await setDoc(
-            doc(
-                db,
-                "users",
-                uid,
-                "filesystem",
-                fileName
-            ), {
-                name: fileName,
-                type: "file",
-                parent: "root",
-                content
-            }
-        );
+                            if (
+                                type === "folder"
+                            ) {
+
+                                this.currentFolder =
+                                    id;
+
+                                win.remove();
+
+                                this.open();
+
+                                return;
+
+                            }
+
+                            if (
+                                type === "file"
+                            ) {
+
+                                const file =
+                                    await this.fs.getFile(
+                                        user.uid,
+                                        name
+                                    );
+
+                                const noteWin =
+                                    this.wm.createWindow(
+                                        name,
+                                        `
+            <textarea
+                id="editor"
+                style="
+                    width:100%;
+                    height:300px;
+                "
+            >${file.content || ""}</textarea>
+
+            <br><br>
+
+            <button id="save-file">
+                저장
+            </button>
+            `
+                                    );
+
+                                noteWin
+                                    .querySelector(
+                                        "#save-file"
+                                    )
+                                    .addEventListener(
+                                        "click",
+                                        async () => {
+
+                                            const content =
+                                                noteWin
+                                                .querySelector(
+                                                    "#editor"
+                                                )
+                                                .value;
+
+                                            await this.fs.saveFile(
+                                                user.uid,
+                                                name,
+                                                content
+                                            );
+
+                                            alert(
+                                                "저장 완료"
+                                            );
+
+                                        }
+                                    );
+
+                            }
+
+                        }
+                    );
+
+                }
+            );
 
     }
 
