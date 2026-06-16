@@ -197,6 +197,66 @@ ${this.currentFolder}
 
                             }
 
+                            if (
+                                type === "file"
+                            ) {
+
+                                const file =
+                                    await this.fs.getFile(
+                                        user.uid,
+                                        name
+                                    );
+
+                                const noteWin =
+                                    this.wm.createWindow(
+                                        name,
+                                        `
+            <textarea
+                id="editor"
+                style="
+                    width:100%;
+                    height:300px;
+                "
+            >${file.content || ""}</textarea>
+
+            <br><br>
+
+            <button id="save-file">
+                저장
+            </button>
+            `
+                                    );
+
+                                noteWin
+                                    .querySelector(
+                                        "#save-file"
+                                    )
+                                    .addEventListener(
+                                        "click",
+                                        async () => {
+
+                                            const content =
+                                                noteWin
+                                                .querySelector(
+                                                    "#editor"
+                                                )
+                                                .value;
+
+                                            await this.fs.saveFile(
+                                                user.uid,
+                                                name,
+                                                content
+                                            );
+
+                                            alert(
+                                                "저장 완료"
+                                            );
+
+                                        }
+                                    );
+
+                            }
+
                         }
                     );
 
