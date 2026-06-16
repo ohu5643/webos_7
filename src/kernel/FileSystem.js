@@ -8,14 +8,11 @@ import {
 }
 from "firebase/firestore";
 
-import {
-    db
-}
-from "../firebase/firebase.js";
+import { db } from "../firebase/firebase.js";
 
 export default class FileSystem {
 
-    async initialize(uid) {
+    async initialize(uid){
 
         const ref =
             collection(
@@ -28,7 +25,7 @@ export default class FileSystem {
         const snapshot =
             await getDocs(ref);
 
-        if (!snapshot.empty) return;
+        if(!snapshot.empty) return;
 
         const defaults = [
             "Documents",
@@ -37,7 +34,7 @@ export default class FileSystem {
             "Desktop"
         ];
 
-        for (const folder of defaults) {
+        for(const folder of defaults){
 
             await setDoc(
                 doc(
@@ -46,25 +43,17 @@ export default class FileSystem {
                     uid,
                     "filesystem",
                     folder
-                ), {
-                    name: folder,
-                    type: "folder",
-                    parent: "root"
+                ),
+                {
+                    name:folder,
+                    type:"folder",
+                    parent:"root"
                 }
             );
-
         }
-
-        console.log(
-            "Filesystem initialized"
-        );
-
     }
 
-    async getNodes(
-        uid,
-        parent = "root"
-    ) {
+    async getNodes(uid,parent="root"){
 
         const ref =
             collection(
@@ -78,24 +67,16 @@ export default class FileSystem {
             await getDocs(ref);
 
         return snapshot.docs
-            .map(
-                doc => ({
-                    id: doc.id,
-                    ...doc.data()
-                })
-            )
+            .map(doc=>({
+                id:doc.id,
+                ...doc.data()
+            }))
             .filter(
-                node =>
-                node.parent === parent
+                node=>node.parent===parent
             );
-
     }
 
-    async createFolder(
-        uid,
-        folderName,
-        parent = "root"
-    ) {
+    async createFolder(uid,name,parent="root"){
 
         await setDoc(
             doc(
@@ -103,21 +84,17 @@ export default class FileSystem {
                 "users",
                 uid,
                 "filesystem",
-                folderName
-            ), {
-                name: folderName,
-                type: "folder",
+                name
+            ),
+            {
+                name,
+                type:"folder",
                 parent
             }
         );
-
     }
 
-    async createFile(
-        uid,
-        fileName,
-        parent = "root"
-    ) {
+    async createFile(uid,name,parent="root"){
 
         await setDoc(
             doc(
@@ -125,21 +102,18 @@ export default class FileSystem {
                 "users",
                 uid,
                 "filesystem",
-                fileName
-            ), {
-                name: fileName,
-                type: "file",
+                name
+            ),
+            {
+                name,
+                type:"file",
                 parent,
-                content: ""
+                content:""
             }
         );
-
     }
 
-    async getFile(
-        uid,
-        fileName
-    ) {
+    async getFile(uid,name){
 
         const ref =
             doc(
@@ -147,26 +121,21 @@ export default class FileSystem {
                 "users",
                 uid,
                 "filesystem",
-                fileName
+                name
             );
 
         const snapshot =
             await getDoc(ref);
 
         return snapshot.data();
-
     }
 
-    async saveFile(
-        uid,
-        fileName,
-        content
-    ) {
+    async saveFile(uid,name,content){
 
-        const oldFile =
+        const old =
             await this.getFile(
                 uid,
-                fileName
+                name
             );
 
         await setDoc(
@@ -175,60 +144,48 @@ export default class FileSystem {
                 "users",
                 uid,
                 "filesystem",
-                fileName
-            ), {
-                ...oldFile,
+                name
+            ),
+            {
+                ...old,
                 content
             }
         );
-
     }
 
-    async deleteNode(
-        uid,
-        nodeId
-    ) {
+    async deleteNode(uid,nodeId){
 
-        const nodes =
+        await deleteDoc(
+            doc(
+                db,
+                "users",
+                uid,
+                "filesystem",
+                nodeId
+            )
+        );
+    }
+
+    async deleteRecursive(uid,nodeId){
+
+        const children =
             await this.getNodes(
                 uid,
                 nodeId
             );
 
+        for(const child of children){
 
-        for (
-            const node of nodes
-        ) {
-
-            await this.deleteNode(
-
+            await this.deleteRecursive(
                 uid,
-
-                node.name
-
+                child.id
             );
-
         }
 
-
-        await deleteDoc(
-
-            doc(
-
-                db,
-
-                "users",
-
-                uid,
-
-                "filesystem",
-
-                nodeId
-
-            )
-
+        await this.deleteNode(
+            uid,
+            nodeId
         );
-
     }
 
 }
