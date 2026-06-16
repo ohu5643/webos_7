@@ -45,8 +45,7 @@ export default class FileSystem {
                     uid,
                     "filesystem",
                     folder
-                ),
-                {
+                ), {
                     name: folder,
                     type: "folder",
                     parent: "root"
@@ -86,7 +85,7 @@ export default class FileSystem {
             )
             .filter(
                 node =>
-                    node.parent === parent
+                node.parent === parent
             );
 
     }
@@ -104,8 +103,7 @@ export default class FileSystem {
                 uid,
                 "filesystem",
                 folderName
-            ),
-            {
+            ), {
                 name: folderName,
                 type: "folder",
                 parent
@@ -127,8 +125,7 @@ export default class FileSystem {
                 uid,
                 "filesystem",
                 fileName
-            ),
-            {
+            ), {
                 name: fileName,
                 type: "file",
                 parent,
@@ -165,6 +162,12 @@ export default class FileSystem {
         content
     ) {
 
+        const oldFile =
+            await this.getFile(
+                uid,
+                fileName
+            );
+
         await setDoc(
             doc(
                 db,
@@ -172,11 +175,8 @@ export default class FileSystem {
                 uid,
                 "filesystem",
                 fileName
-            ),
-            {
-                name: fileName,
-                type: "file",
-                parent: "root",
+            ), {
+                ...oldFile,
                 content
             }
         );
