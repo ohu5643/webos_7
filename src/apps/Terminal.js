@@ -10,6 +10,8 @@ export default class Terminal {
         this.wm = wm;
         this.auth = auth;
 
+        this.currentFolder = "root";
+
     }
 
     open() {
@@ -100,6 +102,8 @@ export default class Terminal {
                         `
                     help<br>
                     ls<br>
+                    pwd<br>
+                    cd [folder]<br>
                     mkdir [name]<br>
                     touch [name]<br>
                     rm [name]<br>
@@ -118,7 +122,9 @@ export default class Terminal {
 
                     const files =
                         await this.fs.getNodes(
-                            user.uid
+                            user.uid,
+
+                            this.currentFolder
                         );
 
 
@@ -166,7 +172,8 @@ export default class Terminal {
 
                     await this.fs.createFolder(
                         user.uid,
-                        folderName
+                        folderName,
+                        this.currentFolder
                     );
 
 
@@ -197,6 +204,7 @@ export default class Terminal {
                     await this.fs.createFile(
                         user.uid,
                         fileName,
+                        this.currentFolder
                     );
 
 
@@ -224,7 +232,8 @@ export default class Terminal {
 
                     const files =
                         await this.fs.getNodes(
-                            user.uid
+                            user.uid,
+                            this.currentFolder
                         );
 
                     const target =
@@ -253,6 +262,85 @@ export default class Terminal {
                         `
     deleted<br><br>
     `;
+
+                    return;
+
+                }
+
+                if (
+                    command === "pwd"
+                ) {
+
+                    output.innerHTML +=
+                        `${this.currentFolder}<br><br>`;
+
+                    return;
+
+                }
+
+                if (
+                    command.startsWith(
+                        "cd "
+                    )
+                ) {
+
+                    const folderName =
+                        command.replace(
+                            "cd ",
+                            ""
+                        );
+
+                    if (folderName === "..") {
+
+                        this.currentFolder =
+                            "root";
+
+                        output.innerHTML +=
+                            "back to root<br><br>";
+
+                        return;
+                    }
+
+
+                    const files =
+                        await this.fs.getNodes(
+
+                            user.uid,
+
+                            this.currentFolder
+
+                        );
+
+
+                    const target =
+                        files.find(
+
+                            file =>
+
+                            file.name === folderName &&
+                            file.type === "folder"
+
+                        );
+
+
+                    if (
+                        !target
+                    ) {
+
+                        output.innerHTML +=
+                            "folder not found<br><br>";
+
+                        return;
+
+                    }
+
+
+                    this.currentFolder =
+                        folderName;
+
+
+                    output.innerHTML +=
+                        "directory changed<br><br>";
 
                     return;
 
