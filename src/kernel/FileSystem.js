@@ -1,4 +1,5 @@
 export default class Explorer {
+export default class FileSystem {
 
     constructor(fs, wm, auth) {
 
