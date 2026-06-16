@@ -91,7 +91,7 @@ export default class FileSystem {
 
     async createFolder(
         uid,
-        folderName
+        folderName,
         parent = "root"
     ) {
 
