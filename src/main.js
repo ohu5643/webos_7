@@ -128,17 +128,12 @@ function renderLogin(){
 
 
 // ---------- WebOS ----------
+
 function renderDesktop(){
 
     document.querySelector('#app').innerHTML = `
 
     <div id="desktop">
-
-        <div id="taskbar">
-            <div id="start-button">
-                WebOS
-            </div>
-        </div>
 
         <div id="desktop-icons">
 
@@ -164,13 +159,72 @@ function renderDesktop(){
 
         </div>
 
+
+        <div
+            id="start-menu"
+
+            style="
+                display:none;
+                position:fixed;
+                bottom:40px;
+                left:0;
+                width:220px;
+                background:#2b2b2b;
+                color:white;
+                padding:10px;
+                border-top-right-radius:8px;
+            "
+        >
+
+            <div id="menu-explorer">
+                📁 Explorer
+            </div>
+
+            <br>
+
+            <div id="menu-terminal">
+                💻 Terminal
+            </div>
+
+            <br>
+
+            <div id="menu-notepad">
+                📝 Notepad
+            </div>
+
+            <br>
+
+            <div id="menu-ai">
+                🤖 AI
+            </div>
+
+            <br>
+
+            <div id="menu-shutdown">
+                ⛔ Shutdown
+            </div>
+
+        </div>
+
+
+        <div id="taskbar">
+
+            <div id="start-button">
+                WebOS
+            </div>
+
+        </div>
+
     </div>
+
     `;
 
 
-    const wm = new WindowManager();
+    const wm =
+        new WindowManager();
 
-    const fs = new FileSystem();
+    const fs =
+        new FileSystem();
 
     const explorer =
         new Explorer(
@@ -188,11 +242,9 @@ function renderDesktop(){
         new AIAssistant(
             wm,
             explorer,
-            notepad,
-            fs,
-            auth
+            notepad
         );
-    
+
     const terminal =
         new Terminal(
             fs,
@@ -201,12 +253,100 @@ function renderDesktop(){
         );
 
 
+    // explorer
     document
         .getElementById(
             "explorer-icon"
         )
         .addEventListener(
             "dblclick",
+            ()=>{
+                explorer.open();
+            }
+        );
+
+
+    // terminal
+    document
+        .getElementById(
+            "terminal-icon"
+        )
+        .addEventListener(
+            "dblclick",
+            ()=>{
+                terminal.open();
+            }
+        );
+
+
+    // ai
+    document
+        .getElementById(
+            "ai-icon"
+        )
+        .addEventListener(
+            "dblclick",
+            ()=>{
+                ai.open();
+            }
+        );
+
+
+    // notepad
+    document
+        .getElementById(
+            "notepad-icon"
+        )
+        .addEventListener(
+            "dblclick",
+            ()=>{
+                notepad.open();
+            }
+        );
+
+
+    // start menu toggle
+    document
+        .getElementById(
+            "start-button"
+        )
+        .addEventListener(
+            "click",
+            ()=>{
+
+                const menu =
+                    document.getElementById(
+                        "start-menu"
+                    );
+
+                if(
+                    menu.style.display ===
+                    "none"
+                ){
+
+                    menu.style.display =
+                        "block";
+
+                }
+
+                else{
+
+                    menu.style.display =
+                        "none";
+
+                }
+
+            }
+        );
+
+
+    // start menu explorer
+    document
+        .getElementById(
+            "menu-explorer"
+        )
+        .addEventListener(
+            "click",
             ()=>{
 
                 explorer.open();
@@ -215,26 +355,28 @@ function renderDesktop(){
         );
 
 
+    // start menu terminal
     document
         .getElementById(
-            "notepad-icon"
+            "menu-terminal"
         )
         .addEventListener(
-            "dblclick",
+            "click",
             ()=>{
 
-                notepad.open();
+                terminal.open();
 
             }
         );
 
 
+    // start menu ai
     document
         .getElementById(
-            "ai-icon"
+            "menu-ai"
         )
         .addEventListener(
-            "dblclick",
+            "click",
             ()=>{
 
                 ai.open();
@@ -243,15 +385,35 @@ function renderDesktop(){
         );
 
 
+    // start menu notepad
     document
         .getElementById(
-            "terminal-icon"
+            "menu-notepad"
         )
         .addEventListener(
-            "dblclick",
+            "click",
             ()=>{
 
-                terminal.open();
+                notepad.open();
+
+            }
+        );
+
+
+    // shutdown
+    document
+        .getElementById(
+            "menu-shutdown"
+        )
+        .addEventListener(
+            "click",
+            ()=>{
+
+                alert(
+                    "WebOS shutting down..."
+                );
+
+                location.reload();
 
             }
         );
@@ -265,30 +427,3 @@ function renderDesktop(){
 
 
 
-// ---------- auth 상태 ----------
-onAuthStateChanged(
-
-    auth,
-
-    async user => {
-
-        if(user){
-
-            console.log(
-                "Logged In:",
-                user.uid
-            );
-
-            renderDesktop();
-
-        }
-
-        else{
-
-            renderLogin();
-
-        }
-
-    }
-
-);
