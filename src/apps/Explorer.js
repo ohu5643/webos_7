@@ -10,6 +10,7 @@ export default class Explorer {
 
     }
 
+
     async open() {
 
         const user =
@@ -17,11 +18,13 @@ export default class Explorer {
 
         if (!user) return;
 
+
         const nodes =
             await this.fs.getNodes(
                 user.uid,
                 this.currentFolder
             );
+
 
         const html =
             nodes.map(
@@ -31,6 +34,10 @@ export default class Explorer {
                     class="file-item"
                     data-id="${node.id}"
                     data-type="${node.type}"
+                    style="
+                        padding:8px;
+                        cursor:pointer;
+                    "
                 >
 
                     ${
@@ -46,34 +53,33 @@ export default class Explorer {
                 `
             ).join("");
 
+
         const win =
             this.wm.createWindow(
+
                 "Explorer",
 
                 `
 
-<div>
+                <div>
 
-현재 위치 :
-${this.currentFolder}
+                    현재 위치 :
+                    ${this.currentFolder}
 
-</div>
+                </div>
 
-<button id="back-folder">
-← 뒤로
-</button>
+                <button id="back-folder">
+                    ← 뒤로
+                </button>
 
-<br><br>
+                <br><br>
+
                 <button id="new-folder">
-
                     새 폴더
-
                 </button>
 
                 <button id="new-file">
-
                     새 파일
-
                 </button>
 
                 <hr>
@@ -83,14 +89,21 @@ ${this.currentFolder}
                     ${html}
 
                 </div>
+
                 `
             );
+
+
+        // =====================
+        // 새 폴더
+        // =====================
 
         win
             .querySelector(
                 "#new-folder"
             )
             .addEventListener(
+
                 "click",
 
                 async () => {
@@ -102,11 +115,17 @@ ${this.currentFolder}
 
                     if (!folderName) return;
 
+
                     await this.fs.createFolder(
+
                         user.uid,
+
                         folderName,
+
                         this.currentFolder
+
                     );
+
 
                     win.remove();
 
@@ -115,11 +134,17 @@ ${this.currentFolder}
                 }
             );
 
+
+        // =====================
+        // 새 파일
+        // =====================
+
         win
             .querySelector(
                 "#new-file"
             )
             .addEventListener(
+
                 "click",
 
                 async () => {
@@ -131,11 +156,17 @@ ${this.currentFolder}
 
                     if (!fileName) return;
 
+
                     await this.fs.createFile(
+
                         user.uid,
+
                         fileName,
+
                         this.currentFolder
+
                     );
+
 
                     win.remove();
 
@@ -144,12 +175,19 @@ ${this.currentFolder}
                 }
             );
 
+
+        // =====================
+        // 뒤로가기
+        // =====================
+
         win
             .querySelector(
                 "#back-folder"
             )
             .addEventListener(
+
                 "click",
+
                 () => {
 
                     this.currentFolder =
@@ -162,15 +200,27 @@ ${this.currentFolder}
                 }
             );
 
+
+        // =====================
+        // 파일/폴더 이벤트
+        // =====================
+
         win
             .querySelectorAll(
                 ".file-item"
             )
             .forEach(
+
                 item => {
 
+                    // -----------------
+                    // 더블클릭
+                    // -----------------
+
                     item.addEventListener(
+
                         "dblclick",
+
                         async () => {
 
                             const type =
@@ -181,6 +231,9 @@ ${this.currentFolder}
                                 .replace("📁", "")
                                 .replace("📄", "")
                                 .trim();
+
+
+                            // 폴더 열기
 
                             if (
                                 type === "folder"
@@ -197,42 +250,56 @@ ${this.currentFolder}
 
                             }
 
+
+                            // 파일 열기
+
                             if (
                                 type === "file"
                             ) {
 
                                 const file =
                                     await this.fs.getFile(
+
                                         user.uid,
+
                                         name
+
                                     );
+
 
                                 const noteWin =
                                     this.wm.createWindow(
+
                                         name,
+
                                         `
-            <textarea
-                id="editor"
-                style="
-                    width:100%;
-                    height:300px;
-                "
-            >${file.content || ""}</textarea>
 
-            <br><br>
+                                        <textarea
+                                            id="editor"
+                                            style="
+                                                width:100%;
+                                                height:300px;
+                                            "
+                                        >${file.content || ""}</textarea>
 
-            <button id="save-file">
-                저장
-            </button>
-            `
+                                        <br><br>
+
+                                        <button id="save-file">
+                                            저장
+                                        </button>
+
+                                        `
                                     );
+
 
                                 noteWin
                                     .querySelector(
                                         "#save-file"
                                     )
                                     .addEventListener(
+
                                         "click",
+
                                         async () => {
 
                                             const content =
@@ -242,11 +309,17 @@ ${this.currentFolder}
                                                 )
                                                 .value;
 
+
                                             await this.fs.saveFile(
+
                                                 user.uid,
+
                                                 name,
+
                                                 content
+
                                             );
+
 
                                             alert(
                                                 "저장 완료"
@@ -260,7 +333,64 @@ ${this.currentFolder}
                         }
                     );
 
+
+                    // -----------------
+                    // 우클릭 삭제
+                    // -----------------
+
+                    item.addEventListener(
+
+                        "contextmenu",
+
+                        async (e) => {
+
+                            e.preventDefault();
+
+
+                            const name =
+                                item.textContent
+                                .replace("📁", "")
+                                .replace("📄", "")
+                                .trim();
+
+
+                            const confirmDelete =
+                                confirm(
+
+                                    `${name} 삭제할까?`
+
+                                );
+
+
+                            if (
+                                !confirmDelete
+                            ) return;
+
+
+                            await this.fs.deleteNode(
+
+                                user.uid,
+
+                                name
+
+                            );
+
+
+                            alert(
+                                "삭제 완료"
+                            );
+
+
+                            win.remove();
+
+                            this.open();
+
+                        }
+
+                    );
+
                 }
+
             );
 
     }
