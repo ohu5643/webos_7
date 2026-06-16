@@ -19,7 +19,8 @@ export default class Explorer {
 
         const nodes =
             await this.fs.getNodes(
-                user.uid this.currentFolder
+                user.uid,
+                this.currentFolder
             );
 
         const html =
@@ -103,7 +104,8 @@ ${this.currentFolder}
 
                     await this.fs.createFolder(
                         user.uid,
-                        folderName this.currentFolder
+                        folderName,
+                        this.currentFolder
                     );
 
                     win.remove();
@@ -131,12 +133,72 @@ ${this.currentFolder}
 
                     await this.fs.createFile(
                         user.uid,
-                        fileName this.currentFolder
+                        fileName,
+                        this.currentFolder
                     );
 
                     win.remove();
 
                     this.open();
+
+                }
+            );
+
+        win
+            .querySelector(
+                "#back-folder"
+            )
+            .addEventListener(
+                "click",
+                () => {
+
+                    this.currentFolder =
+                        "root";
+
+                    win.remove();
+
+                    this.open();
+
+                }
+            );
+
+        win
+            .querySelectorAll(
+                ".file-item"
+            )
+            .forEach(
+                item => {
+
+                    item.addEventListener(
+                        "dblclick",
+                        async () => {
+
+                            const type =
+                                item.dataset.type;
+
+                            const name =
+                                item.textContent
+                                .replace("📁", "")
+                                .replace("📄", "")
+                                .trim();
+
+                            if (
+                                type === "folder"
+                            ) {
+
+                                this.currentFolder =
+                                    name;
+
+                                win.remove();
+
+                                this.open();
+
+                                return;
+
+                            }
+
+                        }
+                    );
 
                 }
             );
