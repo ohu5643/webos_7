@@ -3,7 +3,7 @@ import {
     getDocs,
     getDoc,
     doc,
-    setDoc
+    setDoc,
     deleteDoc
 }
 from "firebase/firestore";
