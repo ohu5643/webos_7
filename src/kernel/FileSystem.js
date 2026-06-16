@@ -189,14 +189,44 @@ export default class FileSystem {
         nodeId
     ) {
 
-        await deleteDoc(
-            doc(
-                db,
-                "users",
+        const nodes =
+            await this.getNodes(
                 uid,
-                "filesystem",
                 nodeId
+            );
+
+
+        for (
+            const node of nodes
+        ) {
+
+            await this.deleteNode(
+
+                uid,
+
+                node.name
+
+            );
+
+        }
+
+
+        await deleteDoc(
+
+            doc(
+
+                db,
+
+                "users",
+
+                uid,
+
+                "filesystem",
+
+                nodeId
+
             )
+
         );
 
     }
