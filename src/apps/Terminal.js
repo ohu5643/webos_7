@@ -1,228 +1,192 @@
 export default class Terminal {
 
-    constructor(
-        fs,
-        wm,
-        auth
-    ) {
+    constructor(fs,wm,auth){
 
         this.fs = fs;
         this.wm = wm;
         this.auth = auth;
-
         this.currentFolder = "root";
 
     }
 
-    open() {
+    open(){
 
         const termWin =
             this.wm.createWindow(
-
                 "Terminal",
 
-                `
+`
+<div id="terminal-output"
+style="
+background:black;
+color:lime;
+height:300px;
+overflow:auto;
+padding:10px;
+font-family:monospace;
+">
 
-                <div
-                    id="terminal-output"
+WebOS Terminal v2<br><br>
 
-                    style="
-                        background:black;
-                        color:lime;
-                        height:300px;
-                        overflow:auto;
-                        padding:10px;
-                        font-family:monospace;
-                    "
+</div>
 
-                >
-
-                    WebOS Terminal<br><br>
-
-                </div>
-
-                <input
-                    id="terminal-input"
-
-                    style="
-                        width:100%;
-                    "
-
-                    placeholder="command..."
-                >
-
-                `
+<input id="terminal-input"
+style="width:100%;"
+placeholder="command..."
+>
+`
             );
-
 
         const output =
             termWin.querySelector(
                 "#terminal-output"
             );
 
-
         const input =
             termWin.querySelector(
                 "#terminal-input"
             );
 
-
         input.addEventListener(
-
             "keydown",
+            async (e)=>{
 
-            async (e) => {
-
-                if (
-                    e.key !== "Enter"
-                ) return;
-
+                if(e.key!=="Enter") return;
 
                 const command =
                     input.value.trim();
 
-
-                input.value = "";
-
+                input.value="";
 
                 output.innerHTML +=
                     `> ${command}<br>`;
 
-
                 const user =
                     this.auth.currentUser;
 
-
-                // help
-                if (
-                    command === "help"
-                ) {
+                if(command==="help"){
 
                     output.innerHTML +=
-                        `
-                    help<br>
-                    ls<br>
-                    pwd<br>
-                    cd [folder]<br>
-                    mkdir [name]<br>
-                    touch [name]<br>
-                    rm [name]<br>
-                    clear<br><br>
-                    `;
-
+`
+help
+ls
+pwd
+cd
+mkdir
+touch
+rm
+cat
+echo
+whoami
+date
+clear<br><br>
+`;
                     return;
-
                 }
 
+                if(command==="whoami"){
 
-                // ls
-                if (
-                    command === "ls"
-                ) {
+                    output.innerHTML +=
+                        `${user.uid}<br><br>`;
+
+                    return;
+                }
+
+                if(command==="date"){
+
+                    output.innerHTML +=
+                        `${new Date()}<br><br>`;
+
+                    return;
+                }
+
+                if(command.startsWith("echo ")){
+
+                    output.innerHTML +=
+                        command.replace("echo ","")
+                        + "<br><br>";
+
+                    return;
+                }
+
+                if(command==="pwd"){
+
+                    output.innerHTML +=
+                        this.currentFolder
+                        + "<br><br>";
+
+                    return;
+                }
+
+                if(command==="ls"){
 
                     const files =
                         await this.fs.getNodes(
                             user.uid,
-
                             this.currentFolder
                         );
 
+                    files.forEach(file=>{
 
-                    files.forEach(
+                        output.innerHTML +=
 
-                        file => {
+                        file.type==="folder"
 
-                            output.innerHTML +=
+                        ?
 
-                                file.type === "folder"
+                        `📁 ${file.name}<br>`
 
-                                ?
+                        :
 
-                                `📁 ${file.name}<br>`
+                        `📄 ${file.name}<br>`;
 
-                                :
+                    });
 
-                                `📄 ${file.name}<br>`;
-
-                        }
-
-                    );
-
-                    output.innerHTML +=
-                        "<br>";
-
+                    output.innerHTML+="<br>";
                     return;
-
                 }
 
+                if(command.startsWith("mkdir ")){
 
-                // mkdir
-                if (
-                    command.startsWith(
-                        "mkdir "
-                    )
-                ) {
-
-                    const folderName =
+                    const name =
                         command.replace(
                             "mkdir ",
                             ""
                         );
 
-
                     await this.fs.createFolder(
                         user.uid,
-                        folderName,
+                        name,
                         this.currentFolder
                     );
 
-
                     output.innerHTML +=
-                        `
-                    folder created<br><br>
-                    `;
+                        "folder created<br><br>";
 
                     return;
-
                 }
 
+                if(command.startsWith("touch ")){
 
-                // touch
-                if (
-                    command.startsWith(
-                        "touch "
-                    )
-                ) {
-
-                    const fileName =
+                    const name =
                         command.replace(
                             "touch ",
                             ""
                         );
 
-
                     await this.fs.createFile(
                         user.uid,
-                        fileName,
+                        name,
                         this.currentFolder
                     );
 
-
                     output.innerHTML +=
-                        `
-                    file created<br><br>
-                    `;
+                        "file created<br><br>";
 
                     return;
-
                 }
 
-                // rm
-                if (
-                    command.startsWith(
-                        "rm "
-                    )
-                ) {
+                if(command.startsWith("rm ")){
 
                     const name =
                         command.replace(
@@ -239,136 +203,66 @@ export default class Terminal {
                     const target =
                         files.find(
                             file =>
-                            file.name === name
+                            file.name===name
                         );
 
-                    if (!target) {
+                    if(!target){
 
                         output.innerHTML +=
-                            `
-        file not found<br><br>
-        `;
+                            "not found<br><br>";
 
                         return;
-
                     }
 
-                    await this.fs.deleteNode(
+                    await this.fs.deleteRecursive(
                         user.uid,
                         target.id
                     );
 
                     output.innerHTML +=
-                        `
-    deleted<br><br>
-    `;
+                        "deleted<br><br>";
 
                     return;
-
                 }
 
-                if (
-                    command === "pwd"
-                ) {
+                if(command.startsWith("cat ")){
 
-                    output.innerHTML +=
-                        `${this.currentFolder}<br><br>`;
-
-                    return;
-
-                }
-
-                if (
-                    command.startsWith(
-                        "cd "
-                    )
-                ) {
-
-                    const folderName =
+                    const name =
                         command.replace(
-                            "cd ",
+                            "cat ",
                             ""
                         );
 
-                    if (folderName === "..") {
-
-                        this.currentFolder =
-                            "root";
-
-                        output.innerHTML +=
-                            "back to root<br><br>";
-
-                        return;
-                    }
-
-
-                    const files =
-                        await this.fs.getNodes(
-
+                    const file =
+                        await this.fs.getFile(
                             user.uid,
-
-                            this.currentFolder
-
+                            name
                         );
 
-
-                    const target =
-                        files.find(
-
-                            file =>
-
-                            file.name === folderName &&
-                            file.type === "folder"
-
-                        );
-
-
-                    if (
-                        !target
-                    ) {
+                    if(!file){
 
                         output.innerHTML +=
-                            "folder not found<br><br>";
+                            "file not found<br><br>";
 
                         return;
-
                     }
-
-
-                    this.currentFolder =
-                        folderName;
-
 
                     output.innerHTML +=
-                        "directory changed<br><br>";
+                        `${file.content}<br><br>`;
 
                     return;
-
                 }
 
+                if(command==="clear"){
 
-                // clear
-                if (
-                    command === "clear"
-                ) {
-
-                    output.innerHTML =
-                        "";
-
+                    output.innerHTML = "";
                     return;
-
                 }
-
 
                 output.innerHTML +=
-                    `
-                unknown command<br><br>
-                `;
+                    "unknown command<br><br>";
 
             }
-
         );
-
     }
-
 }
