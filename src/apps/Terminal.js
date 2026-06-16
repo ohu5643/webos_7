@@ -4,7 +4,7 @@ export default class Terminal {
         fs,
         wm,
         auth
-    ){
+    ) {
 
         this.fs = fs;
         this.wm = wm;
@@ -12,7 +12,7 @@ export default class Terminal {
 
     }
 
-    open(){
+    open() {
 
         const termWin =
             this.wm.createWindow(
@@ -69,9 +69,9 @@ export default class Terminal {
 
             "keydown",
 
-            async (e)=>{
+            async (e) => {
 
-                if(
+                if (
                     e.key !== "Enter"
                 ) return;
 
@@ -92,16 +92,17 @@ export default class Terminal {
 
 
                 // help
-                if(
+                if (
                     command === "help"
-                ){
+                ) {
 
                     output.innerHTML +=
-                    `
+                        `
                     help<br>
                     ls<br>
                     mkdir [name]<br>
                     touch [name]<br>
+                    rm [name]<br>
                     clear<br><br>
                     `;
 
@@ -111,9 +112,9 @@ export default class Terminal {
 
 
                 // ls
-                if(
+                if (
                     command === "ls"
-                ){
+                ) {
 
                     const files =
                         await this.fs.getNodes(
@@ -123,19 +124,19 @@ export default class Terminal {
 
                     files.forEach(
 
-                        file=>{
+                        file => {
 
                             output.innerHTML +=
 
-                            file.type === "folder"
+                                file.type === "folder"
 
-                            ?
+                                ?
 
-                            `📁 ${file.name}<br>`
+                                `📁 ${file.name}<br>`
 
-                            :
+                                :
 
-                            `📄 ${file.name}<br>`;
+                                `📄 ${file.name}<br>`;
 
                         }
 
@@ -150,11 +151,11 @@ export default class Terminal {
 
 
                 // mkdir
-                if(
+                if (
                     command.startsWith(
                         "mkdir "
                     )
-                ){
+                ) {
 
                     const folderName =
                         command.replace(
@@ -170,7 +171,7 @@ export default class Terminal {
 
 
                     output.innerHTML +=
-                    `
+                        `
                     folder created<br><br>
                     `;
 
@@ -180,11 +181,11 @@ export default class Terminal {
 
 
                 // touch
-                if(
+                if (
                     command.startsWith(
                         "touch "
                     )
-                ){
+                ) {
 
                     const fileName =
                         command.replace(
@@ -200,7 +201,7 @@ export default class Terminal {
 
 
                     output.innerHTML +=
-                    `
+                        `
                     file created<br><br>
                     `;
 
@@ -208,11 +209,60 @@ export default class Terminal {
 
                 }
 
+                // rm
+                if (
+                    command.startsWith(
+                        "rm "
+                    )
+                ) {
+
+                    const name =
+                        command.replace(
+                            "rm ",
+                            ""
+                        );
+
+                    const files =
+                        await this.fs.getNodes(
+                            user.uid
+                        );
+
+                    const target =
+                        files.find(
+                            file =>
+                            file.name === name
+                        );
+
+                    if (!target) {
+
+                        output.innerHTML +=
+                            `
+        file not found<br><br>
+        `;
+
+                        return;
+
+                    }
+
+                    await this.fs.deleteNode(
+                        user.uid,
+                        target.id
+                    );
+
+                    output.innerHTML +=
+                        `
+    deleted<br><br>
+    `;
+
+                    return;
+
+                }
+
 
                 // clear
-                if(
+                if (
                     command === "clear"
-                ){
+                ) {
 
                     output.innerHTML =
                         "";
@@ -223,7 +273,7 @@ export default class Terminal {
 
 
                 output.innerHTML +=
-                `
+                    `
                 unknown command<br><br>
                 `;
 
