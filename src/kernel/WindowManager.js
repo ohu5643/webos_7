@@ -1,130 +1,75 @@
 export default class WindowManager {
-
-    constructor(){
-
+    constructor() {
         this.zIndex = 100;
-
     }
 
-    createWindow(title,content){
+    createWindow(title, content) {
+        const windowEl = document.createElement('div');
 
-        const windowEl =
-            document.createElement("div");
-
-        windowEl.className = "window";
+        windowEl.className = 'window';
 
         windowEl.innerHTML = `
+            <div class="window-header">
+                <span>${title}</span>
 
-        <div class="window-header">
-
-            <span>${title}</span>
-
-            <div class="window-buttons">
-
-                <button class="min-btn">−</button>
-                <button class="close-btn">✕</button>
-
+                <div class="window-buttons">
+                    <button class="close-btn">✕</button>
+                </div>
             </div>
 
-        </div>
-
-        <div class="window-content">
-
-            ${content}
-
-        </div>
-
+            <div class="window-content">
+                ${content}
+            </div>
         `;
 
-        windowEl.style.left = "120px";
-        windowEl.style.top = "120px";
+        windowEl.style.left = '100px';
+        windowEl.style.top = '100px';
         windowEl.style.zIndex = this.zIndex++;
 
-        document
-            .getElementById("desktop")
-            .appendChild(windowEl);
+        document.getElementById('desktop').appendChild(windowEl);
 
         this.makeDraggable(windowEl);
 
-        windowEl
-            .querySelector(".close-btn")
-            .addEventListener(
-                "click",
-                ()=>windowEl.remove()
-            );
+        windowEl.addEventListener('mousedown', () => {
+            windowEl.style.zIndex = this.zIndex++;
+        });
 
         windowEl
-            .querySelector(".min-btn")
-            .addEventListener(
-                "click",
-                ()=>{
-                    windowEl.style.display="none";
-                }
-            );
-
-        windowEl.addEventListener(
-            "mousedown",
-            ()=>{
-                windowEl.style.zIndex =
-                    this.zIndex++;
-            }
-        );
+            .querySelector('.close-btn')
+            .addEventListener('click', () => {
+                windowEl.remove();
+            });
 
         return windowEl;
     }
 
-    makeDraggable(windowEl){
-
-        const header =
-            windowEl.querySelector(
-                ".window-header"
-            );
+    makeDraggable(windowEl) {
+        const header = windowEl.querySelector('.window-header');
 
         let dragging = false;
+
         let offsetX = 0;
         let offsetY = 0;
 
-        header.addEventListener(
-            "mousedown",
-            (e)=>{
+        header.addEventListener('mousedown', (e) => {
+            dragging = true;
 
-                dragging = true;
+            offsetX = e.clientX - windowEl.offsetLeft;
+            offsetY = e.clientY - windowEl.offsetTop;
+        });
 
-                offsetX =
-                    e.clientX -
-                    windowEl.offsetLeft;
+        document.addEventListener('mousemove', (e) => {
+            if (!dragging) return;
 
-                offsetY =
-                    e.clientY -
-                    windowEl.offsetTop;
+            windowEl.style.left =
+                e.clientX - offsetX + 'px';
 
-            }
-        );
+            windowEl.style.top =
+                e.clientY - offsetY + 'px';
+        });
 
-        document.addEventListener(
-            "mousemove",
-            (e)=>{
-
-                if(!dragging) return;
-
-                windowEl.style.left =
-                    e.clientX -
-                    offsetX +
-                    "px";
-
-                windowEl.style.top =
-                    e.clientY -
-                    offsetY +
-                    "px";
-
-            }
-        );
-
-        document.addEventListener(
-            "mouseup",
-            ()=>{
-                dragging=false;
-            }
-        );
+        document.addEventListener('mouseup', () => {
+            dragging = false;
+        });
     }
 }
